@@ -1,0 +1,44 @@
+version: "3.3"
+
+networks:
+  docker-net:
+    driver: bridge
+
+services:
+  nginx:
+    restart: always
+    image: nginx
+    ports:
+        - "8000:8000"
+    hostname: nginx
+    container_name: nginx
+    volumes:
+      - ./data/nginx/conf.d/:/etc/nginx/conf.d/
+      - ./data/backend/resources/:/data/backend/resources/
+    networks:
+      - docker-net
+    logging:
+        driver: "json-file"
+        options:
+          max-size: "10m"
+          max-file: "5"
+
+  backend:
+    restart: unless-stopped
+    build: ./backend
+    container_name: backend
+    volumes:
+      - ./data/backend/:/data
+    environment:
+      - SECRET_KEY=3jk8kgiwkt&552n#4hdwk5biqu2t_h0axk(grzla(b)e
+      - DEBUG=False
+      - DATABASE_URL=sqlite:////data/db.sqlite3
+      - ALLOWED_HOSTS=*
+      - RESOURCES_DIR=/data/resources
+    networks:
+      - docker-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
